@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RAG TriviaQA Demo</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: #e0e0e0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 40px;
+      color: #ffffff;
+    }
+
+    label {
+      display: block;
+      margin: 20px 0 8px;
+      font-weight: bold;
+    }
+
+    input[type="text"],
+    select {
+      width: 100%;
+      padding: 12px;
+      border-radius: 6px;
+      border: none;
+      font-size: 1em;
+      background-color: #2a2a2a;
+      color: #e0e0e0;
+    }
+
+    input[type="checkbox"] {
+      margin-right: 8px;
+    }
+
+    button {
+      margin-top: 30px;
+      padding: 12px 20px;
+      background-color: #1e88e5;
+      color: white;
+      font-size: 1em;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #1565c0;
+    }
+
+    .result {
+      margin-top: 40px;
+      padding: 20px;
+      background-color: #1e1e1e;
+      border-radius: 8px;
+      border: 1px solid #333;
+    }
+
+    .checkbox-group {
+      margin-top: 20px;
+    }
+
+    details summary {
+      cursor: pointer;
+      margin: 30px 0 10px;
+      font-weight: bold;
+    }
+
+    ul.examples {
+      list-style: none;
+      padding-left: 0;
+      margin: 0;
+    }
+
+    ul.examples li {
+      padding: 6px 0;
+      border-bottom: 1px solid #333;
+      cursor: pointer;
+    }
+
+    ul.examples li:hover {
+      background-color: #222;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🧠 RAG TriviaQA Demo</h1>
+    <label for="prompt">Enter your question:</label>
+    <input type="text" id="prompt" placeholder="Where in England was Dame Judi Dench born?">
+
+    <label for="model_id">Model ID:</label>
+    <select id="model_id"></select>
+
+    <div class="checkbox-group">
+      <label>
+        <input type="checkbox" id="enable_rag" />
+        Enable TriviaQA Wikipedia RAG
+      </label>
+    </div>
+
+    <button onclick="ask()">Ask</button>
+
+    <div id="result" class="result"></div>
+
+    <details>
+      <summary>🎯 Click to see 100 example questions you can ask</summary>
+      <ul class="examples" id="examples"></ul>
+    </details>
+  </div>
+
+  <script>
+    let apiEndpoint = "";
+
+    // Load config.json for endpoint, example questions, and model options
+    fetch("config.json")
+      .then(res => res.json())
+      .then(config => {
+        apiEndpoint = config.apiEndpoint;
+        console.log("✅ Loaded API Endpoint:", apiEndpoint);
+
+        const exampleQuestions = config.exampleQuestions || [];
+        const list = document.getElementById("examples");
+        exampleQuestions.forEach(q => {
+          const li = document.createElement("li");
+          li.textContent = q;
+          li.onclick = () => document.getElementById("prompt").value = q;
+          list.appendChild(li);
+        });
+
+        const modelSelect = document.getElementById("model_id");
+        (config.modelOptions || []).forEach(model => {
+          const option = document.createElement("option");
+          option.value = model;
+          option.textContent = model;
+          modelSelect.appendChild(option);
+        });
+      })
+      .catch(err => {
+        document.getElementById("result").textContent = "❌ Failed to load config: " + err;
+      });
+
+    async function ask() {
+      const prompt = document.getElementById("prompt").value;
+      const modelId = document.getElementById("model_id").value;
+      const enableRag = document.getElementById("enable_rag").checked;
+
+      if (!apiEndpoint) {
+        document.getElementById("result").textContent = "❌ API endpoint not loaded yet.";
+        return;
+      }
+
+      const url = new URL(apiEndpoint);
+      url.searchParams.append("prompt", prompt);
+      url.searchParams.append("model_id", modelId);
+      url.searchParams.append("enable_rag", enableRag.toString());
+
+      document.getElementById("result").textContent = "⏳ Loading...";
+
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+        document.getElementById("result").textContent = data.answer;
+      } catch (err) {
+        document.getElementById("result").textContent = "❌ Error: " + err;
+      }
+    }
+  </script>
+</body>
+</html>
+
