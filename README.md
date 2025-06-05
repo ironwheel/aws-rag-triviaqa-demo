@@ -15,8 +15,7 @@ Users can submit a question via a web-based UI backed by Amazon Bedrock and Open
 
 ## Demo Notes
 1. Only the amazon.titan-text-lite-v1 model works at present.
-2. The amazon.titan-text-lite-v1 model has very stringent guardrails and will reject some of the TriviaQA questions as inappropriate if RAG isn't enabled.
-3. The amazon.titan-text-lite-v1 model may outright fail some TriviaQA requests without RAG enabled.
+2. The amazon.titan-text-lite-v1 model has very stringent guardrails and will reject some of the TriviaQA questions as inappropriate if RAG isn't enabled. You may see these errors: "Sorry - this model is designed to avoid potentially inappropriate content." or "Sorry - this model is designed to avoid personally identifiable information." or "Sorry - this model is unable to respond to the prompt." 
 
 ## Architecture
 
