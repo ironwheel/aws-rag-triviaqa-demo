@@ -13,13 +13,50 @@ Users can submit a question via a web-based UI backed by Amazon Bedrock and Open
 4. Optionally enable "TriviaQA Wikipedia RAG".
 5. Click **Ask** to receive an AI-generated answer.
 
-The repository showcases two complete implementations:
+## Demo Notes
+1. Only the amazon.titan-text-lite-v1 model works at present.
+2. The amazon.titan-text-lite-v1 model has very stringent guardrails and will reject some of the TriviaQA questions as inappropriate if RAG isn't enabled.
+3. The amazon.titan-text-lite-v1 model may outright fail some TriviaQA requests without RAG enabled.
 
-- A local FAISS-based RAG pipeline
-- A production-ready AWS Lambda-based RAG service using AWS OpenSearch Serverless (AOSS)
-  (the live demo is built on this code plus an API Gateway)
+## Architecture
+
+```mermaid
+graph TB
+    subgraph "Public Internet"
+        Website[Static Website<br/>Hosted on S3]
+        APIG[API Gateway]
+    end
+
+    subgraph "VPC"
+        subgraph "Private Subnet"
+            Lambda[Lambda Function]
+            EC2[EC2 Instance<br/>for AOSS Setup]
+            AOSS[OpenSearch<br/>Serverless]
+        end
+    end
+
+    Website -->|HTTP| APIG
+    APIG -->|HTTP| Lambda
+    Lambda -->|Vector Search| AOSS
+    Lambda -->|Generate| Bedrock[Amazon Bedrock]
+    EC2 -->|Setup Index| AOSS
+    EC2 -->|Upload Vectors| AOSS
+
+    style Website fill:#f9f,stroke:#333,stroke-width:2px
+    style APIG fill:#bbf,stroke:#333,stroke-width:2px
+    style Lambda fill:#bfb,stroke:#333,stroke-width:2px
+    style EC2 fill:#bfb,stroke:#333,stroke-width:2px
+    style AOSS fill:#bfb,stroke:#333,stroke-width:2px
+    style Bedrock fill:#fbb,stroke:#333,stroke-width:2px
+```
 
 ## 📁 Repository Structure
+
+The repository showcases two complete implementations of TriviaQA-based RAG:
+
+- A local FAISS-based RAG pipeline that can run on your laptop.
+- A production-ready AWS Lambda-based RAG service using AWS OpenSearch Serverless (AOSS) running in a VPC.
+  (the live demo is built on this code plus an API Gateway)
 
 ```
 aws-rag-triviaqa-demo/
@@ -31,23 +68,23 @@ aws-rag-triviaqa-demo/
 ├─common_utils/
 │   ├─extract_to_s3.py
 │   └─README.md
-├─faiss_demo/
+├─local-faiss-demo/
 │   ├─build_faiss_index.py
 │   ├─query_rag.py
 │   └─README.md
-├─aoss_lambda_demo/
+├─aoss-serverless-demo/
 │   ├─ec2_utils/
 │   │   ├─create_aoss_index.py
 │   │   ├─embed_to_aoss.py
 │   │   ├─query_rag.py
 │   │   └─README.md
-│   └─lambda/
-│       ├─lambda_function.py
+│   ├─lambda/
+│   │   ├─lambda_function.py
+│   │   └─README.md
+│   └─website/
+│       ├─index.html
+│       ├─config.json
 │       └─README.md
-└─website/
-    ├─index.html
-    ├─config.json
-    └─README.md
 ```
 
 ---
@@ -75,7 +112,7 @@ Extracts relevant evidence files from the TriviaQA `.tar.gz` archive using the W
 
 ---
 
-## ☁️ Lambda + AOSS Demo
+## ☁️ Serverless + AOSS Demo
 
 ### `ec2_utils/create_aoss_index.py`
 Creates the AOSS index with FAISS k-NN vector settings.
@@ -130,7 +167,7 @@ These must be defined in the Lambda configuration:
 
 - `AOSS_ENDPOINT` — the full OpenSearch Serverless endpoint URL (e.g. `https://xxxxx.us-east-1.aoss.amazonaws.com`)
 - `INDEX_NAME` — the name of the AOSS index used for vector search
-- `S3_SITE_ORIGIN` - the S3 site URL for the test website to enforce CORS
+- `S3_SITE_ORIGIN` - the S3 site URL for the demo website to enforce CORS
 ---
 
 ## 🌐 Static Web UI Demo
