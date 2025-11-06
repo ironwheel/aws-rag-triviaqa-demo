@@ -1,21 +1,10 @@
 # AWS RAG TriviaQA Project
 
-🚀 **Live Demo**: [Try the RAG TriviaQA Demo](https://aws-rag-triviaqa-site.s3.us-east-1.amazonaws.com/index.html)
-
 This repository demonstrates a fully serverless Retrieval-Augmented Generation (RAG) architecture on AWS using the [TriviaQA dataset](https://www.kaggle.com/datasets/andreajaunarena/triviaqa-dataset).
 
-Users can submit a question via a web-based UI backed by Amazon Bedrock and OpenSearch Serverless. The app can retrieve supporting Wikipedia evidence passages using vector search, and optionally pass them into a generative model to produce an answer.
+(There used to be a cool live demo of all this here, but the monthly AWS bill was too pricey!)
 
-## 🧠 How to Use
-1. Open the [demo site](https://aws-rag-triviaqa-site.s3.us-east-1.amazonaws.com/index.html).
-2. Enter a question in the text box (or choose from the 100 examples).
-3. Choose a model from the dropdown.
-4. Optionally enable "TriviaQA Wikipedia RAG".
-5. Click **Ask** to receive an AI-generated answer.
-
-## Demo Notes
-1. Only the amazon.titan-text-lite-v1 model works at present.
-2. The amazon.titan-text-lite-v1 model has very stringent guardrails and will reject some of the TriviaQA questions as inappropriate if RAG isn't enabled. You may see these errors: "Sorry - this model is designed to avoid potentially inappropriate content." or "Sorry - this model is designed to avoid personally identifiable information." or "Sorry - this model is unable to respond to the prompt." 
+Users can submit a question via a web-based UI backed by Amazon Bedrock and OpenSearch Serverless. The app can retrieve supporting Wikipedia evidence passages using vector search, and optionally pass them into a generative model to produce an answer. 
 
 ## Architecture
 
@@ -84,6 +73,9 @@ aws-rag-triviaqa-demo/
 │       ├─index.html
 │       ├─config.json
 │       └─README.md
+├─teardown/
+│   ├─delete_demo_resources.sh
+│   └─README.md
 ```
 
 ---
@@ -204,6 +196,21 @@ cd setup
 chmod +x install.sh
 ./install.sh
 ```
+
+---
+
+## 🗑️ Teardown / Resource Deletion
+
+If you've deployed the demo and need to delete AWS resources to stop costs, see the [teardown guide](./teardown/README.md).
+
+**Quick teardown:**
+```bash
+cd teardown
+./delete_demo_resources.sh
+```
+
+**Estimated monthly cost of running the demo:** ~$200/month  
+**Main cost drivers:** OpenSearch Serverless (~$150-180/month), Lambda with VPC, API Gateway
 
 ---
 
